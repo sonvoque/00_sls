@@ -219,7 +219,7 @@ static void init_default_parameters(void) {
 /*---------------------------------------------------------------------------*/
 void print_cmd_data(cmd_struct_t command) {
 	uint8_t i;	
-  	PRINTF("data = [");
+  	PRINTF(" - Data = [");
 	for (i=0; i<MAX_CMD_DATA_LEN; i++) {PRINTF("%02X",command.arg[i]); }
   	PRINTF("]\n");
 }
@@ -227,7 +227,7 @@ void print_cmd_data(cmd_struct_t command) {
 /*---------------------------------------------------------------------------*/
 static void make_packet_for_node(cmd_struct_t *cmd, uint8_t* key, uint8_t encryption_en) {
 	if (encryption_en==TRUE) {
-    	PRINTF("Key = "); phex_16((uint8_t*)key);
+    	PRINTF(" - Key = "); phex_16((uint8_t*)key);
 		encrypt_payload(cmd, key);
 	} else {
 	    PRINTF(" - Encryption:... DISABLED \n");    
@@ -369,15 +369,14 @@ static void process_hello_cmd(cmd_struct_t command){
 				tem = (command.arg[0] << 8) | command.arg[1];
 				net_db.challenge_code = tem & 0xFFFF;
 				net_db.challenge_code_res = hash(net_db.challenge_code);
-				PRINTF("challenge_code = 0x%04X \n", net_db.challenge_code);
-				PRINTF("challenge_res  = 0x%04X \n", net_db.challenge_code_res);
+				PRINTF(" - challenge_code = 0x%04X, challenge_res  = 0x%04X \n", net_db.challenge_code, net_db.challenge_code_res);
 
 				reply.arg[0] = (net_db.challenge_code_res >> 8 ) & 0xFF;
 				reply.arg[1] = (net_db.challenge_code_res) & 0xFF;
 
 				reply.arg[2] = net_db.channel;
 				rssi_sent = net_db.rssi + 150;
-				PRINTF("rssi_sent = %d \n", rssi_sent);
+				PRINTF(" - rssi_sent = %d \n", rssi_sent);
 				reply.arg[3] = (rssi_sent & 0xFF);	
 				reply.arg[4] = net_db.lqi;
 				reply.arg[5] = net_db.tx_power; 
@@ -405,17 +404,15 @@ static void process_hello_cmd(cmd_struct_t command){
 				state = STATE_NORMAL;
 				memcpy(&net_db.app_code,&cmd.arg,16);
 				net_db.authenticated = TRUE;
-				PRINTF("Got the APP_KEY: authenticated \n");
-			    PRINTF("Key = [");
-    			for (i=0; i<=15; i++) {	PRINTF("%02X ", net_db.app_code[i]);}
-    			PRINTF("]\n");
-    		
 				encryption_phase = net_db.authenticated;
 				sent_app_key_ack = TRUE;
-				PRINTF("encryption_phase =  %d: \n", encryption_phase);				
-
 				env_db.id = reply.arg[16];
-				PRINTF("My APP-ID = %d \n", env_db.id);
+
+				PRINTF("In state = %d, got the APP_KEY: authenticated \n", state);
+			    PRINTF(" - Key = [");
+    			for (i=0; i<=15; i++) {	PRINTF("%02X ", net_db.app_code[i]);}
+    			PRINTF("]\n");
+				PRINTF(" - encryption_phase =  %d; My APP-ID = %d \n", encryption_phase, env_db.id);				
 
 				leds_on(GREEN);
 				break;
@@ -435,15 +432,14 @@ static void process_hello_cmd(cmd_struct_t command){
 				tem = (command.arg[0] << 8) | command.arg[1];
 				net_db.challenge_code = tem & 0xFFFF;
 				net_db.challenge_code_res = hash(net_db.challenge_code);
-				PRINTF("challenge_code = 0x%04X \n", net_db.challenge_code);
-				PRINTF("challenge_res  = 0x%04X \n", net_db.challenge_code_res);
+				PRINTF(" - challenge_code = 0x%04X, challenge_res  = 0x%04X \n", net_db.challenge_code, net_db.challenge_code_res);
 
 				reply.arg[0] = (net_db.challenge_code_res >> 8 ) & 0xFF;
 				reply.arg[1] = (net_db.challenge_code_res) & 0xFF;
 
 				reply.arg[2] = net_db.channel;
 				rssi_sent = net_db.rssi + 150;
-				PRINTF("rssi_sent = %d\n", rssi_sent);
+				PRINTF(" - rssi_sent = %d\n", rssi_sent);
 				reply.arg[3] = (rssi_sent & 0xFF);			
 				reply.arg[4] = net_db.lqi;
 				reply.arg[5] = net_db.tx_power; 
@@ -473,19 +469,19 @@ static void process_hello_cmd(cmd_struct_t command){
 				net_db.authenticated = TRUE;
 				encryption_phase = net_db.authenticated;
 
-				PRINTF("Got the APP_KEY: authenticated \n");
-			    PRINTF("Key = [");
-    			for (i=0; i<=15; i++) {PRINTF("%02X", net_db.app_code[i]);}
-    			PRINTF("]\n");
-
-				sent_app_key_ack = TRUE;
-				PRINTF("encryption_phase =  %d: \n", encryption_phase);		
-
+				sent_app_key_ack = TRUE;				
 				env_db.id = reply.arg[16];
-				PRINTF("My APP-ID = %d \n", env_db.id);		
+
+				PRINTF("In state = %d, got the APP_KEY: authenticated \n", state);
+			    PRINTF(" - Key = [");
+    			for (i=0; i<=15; i++) {	PRINTF("%02X ", net_db.app_code[i]);}
+    			PRINTF("]\n");
+				PRINTF(" - encryption_phase =  %d; My APP-ID = %d \n", encryption_phase, env_db.id);				
 
 				leds_on(GREEN);
-				break;				
+				break;			
+
+			// other command processing here		
 		}
 	}
 }
@@ -517,7 +513,7 @@ static uint8_t is_cmd_of_led (cmd_struct_t cmd) {
 
 /*----------------------------------------------------------------------*/
 void print_cmd(cmd_struct_t cmd) {
-	PRINTF("Rx CMD-struct: sfd=0x%02X; len=%d; seq=%d; type=0x%02X; cmd=0x%02X; err_code=0x%04X\n",
+	PRINTF(" - Rx CMD-struct: sfd=0x%02X; len=%d; seq=%d; type=0x%02X; cmd=0x%02X; err_code=0x%04X\n",
 							cmd.sfd, cmd.len, cmd.seq, cmd.type, cmd.cmd, cmd.err_code);
 }
 
@@ -529,9 +525,9 @@ static void tcpip_handler(void)	{
   		blink_led(GREEN);
     	len = uip_datalen();
     	memcpy(buf, uip_appdata, len);
-    	PRINTF("In state = %d, received a packet from [", state);
+    	PRINTF("\n In state = %d, received a packet (%d byte) from [", state, len);
     	PRINT6ADDR(&UIP_IP_BUF->srcipaddr);
-    	PRINTF("]:%u, %d bytes of data: ", UIP_HTONS(UIP_UDP_BUF->srcport), len);
+    	PRINTF("]:%u \n", UIP_HTONS(UIP_UDP_BUF->srcport));
 		
     	uip_ipaddr_copy(&server_conn->ripaddr, &UIP_IP_BUF->srcipaddr);
     	server_conn->rport = UIP_UDP_BUF->srcport;
@@ -549,14 +545,14 @@ static void tcpip_handler(void)	{
 		print_cmd_data(cmd);
 
 		/* check CRC of command: no need to check, lower layer will do*/
-		if (check_crc_for_cmd(&cmd)==TRUE) {PRINTF("Good CRC \n"); }
-		else {PRINTF("Bad CRC \n");}
+		if (check_crc_for_cmd(&cmd)==TRUE) {PRINTF(" - Good CRC \n"); }
+		else {PRINTF(" - Bad CRC \n");}
 
 		reply = cmd;		
 
 		//process command 
 		new_seq = cmd.seq;
-		PRINTF("[new_seq/old_seq] = [%d/%d] \n", new_seq, curr_seq);			
+		PRINTF(" - [new_seq/old_seq] = [%d/%d] \n", new_seq, curr_seq);			
 
 		if (is_cmd_of_nw(cmd)) {
 			/* get a REQ */
@@ -574,7 +570,7 @@ static void tcpip_handler(void)	{
 				process_hello_cmd(cmd);	
 			
 			} 
-			PRINTF("Reply for NW command: \n");
+			PRINTF("\nReply for NW command: \n");
 			send_reply(reply, encryption_phase);
 		}	
 
@@ -582,7 +578,7 @@ static void tcpip_handler(void)	{
 		if (is_cmd_of_led(cmd)){
 			if (state==STATE_NORMAL) {
 #if defined(SLS_USING_SKY) || defined(SLS_USING_Z1)			/* used for Cooja simulate the reply from LED driver */
-				PRINTF("Reply for LED-driver command: \n");
+				PRINTF("\nReply for LED-driver command: \n");
 				send_reply(reply, encryption_phase);
 #endif
 		send_cmd_to_uart();
@@ -676,7 +672,7 @@ static void get_radio_parameter(void) {
 #ifndef SLS_USING_CC2530DK
 	NETSTACK_RADIO.get_value(RADIO_PARAM_CHANNEL, &aux);
 	net_db.channel = (unsigned int) aux;
-	PRINTF("CH = %u, ", (unsigned int) aux);	
+	PRINTF(" - CH = %u, ", (unsigned int) aux);	
 
  	aux = packetbuf_attr(PACKETBUF_ATTR_RSSI);
 	net_db.rssi = (int8_t)aux;
@@ -710,9 +706,9 @@ static void send_reply(cmd_struct_t res, uint8_t encryption_en) {
 	make_packet_for_node(&response, net_db.app_code, encryption_en);
 
 	/* echo back to sender */	
-	PRINTF("Reply to [");
+	PRINTF("Reply a msg (%d bytes) to [", sizeof(res));
 	PRINT6ADDR(&UIP_IP_BUF->srcipaddr);
-	PRINTF("]:%u %u bytes\n", UIP_HTONS(UIP_UDP_BUF->srcport), sizeof(res));
+	PRINTF("]:%u \n", UIP_HTONS(UIP_UDP_BUF->srcport));
 	uip_udp_packet_send(server_conn, &response, sizeof(response));
 
 	/* Restore server connection to allow data from any node */
@@ -735,10 +731,11 @@ static void reset_sequence(){
 static void send_asyn_msg(uint8_t encryption_en){ 
 	cmd_struct_t response;
 
+
 	// pass data of env_db to payload	
 	memcpy(&emer_reply.arg, &env_db,sizeof(env_db));
 
-	//attach rssi
+	//attach rssi if needed
 
 	// no retransmission here
 	if (is_connected()==TRUE) {
@@ -753,13 +750,14 @@ static void send_asyn_msg(uint8_t encryption_en){
 			gen_crc_for_cmd(&response);
 			make_packet_for_node(&response, net_db.app_code, encryption_en);
 
-			/* debug only*/	
+			random_delay = rand_delay();
+			PRINTF(" - Delay a random time = %u ms \n", (uint16_t)((uint32_t)(random_delay*2.83)/1000));
+			clock_delay(random_delay);
+			uip_udp_packet_send(client_conn, &response, sizeof(response));	
+
 			PRINTF("Client sending (%d bytes) ASYNC msg [%d], CMD = 0x%02X, to BR [", sizeof(response), async_seq, emer_reply.cmd);
 			PRINT6ADDR(&client_conn->ripaddr);
-			PRINTF("] \n");
-
-			clock_delay(rand_delay());
-			uip_udp_packet_send(client_conn, &response, sizeof(response));	
+			PRINTF("] \n\n");
 		}
 		else {
 			PRINTF("Failed to send ASYNC msg [%d]: Route to BR found but unauthenticated...\n", async_seq);
@@ -804,7 +802,7 @@ static void et_timeout_hanler(){
     		process_sensor(PRINT_SENSOR);
 
     		if (timer_cnt > 60) {  // crash or something wrong--> reboot
-    			PRINTF("- Something wrong...RESET");
+    			PRINTF("- Something wrong: timer_cnt = %d,... RESET", timer_cnt);
     			watchdog_reboot();	
     		}
     	}	
@@ -821,16 +819,16 @@ static void et_timeout_hanler(){
 				// try to send NUM_ASYNC_MSG_RETRANS times
 				j =NUM_ASYNC_MSG_RETRANS;
 				while ((j--)>0) {
-					random_delay = rand_delay();
-					PRINTF("Delay a random time = %u ms for retrans_num = %d \n", (uint16_t)((uint32_t)(random_delay*2.83)/1000), NUM_ASYNC_MSG_RETRANS-j-1);
-					clock_delay(random_delay);
+					PRINTF(" - retrans_num = %d: \n", NUM_ASYNC_MSG_RETRANS-j-1);
 					send_asyn_msg(encryption_phase);
-					async_seq--; // send multiple msg with same seq
-					//j++;
+					async_seq--; 		// send multiple msg with same seq
 				} 
 				async_seq++;	
 				emergency_status = SEND_ASYNC_MSG_CONTINUOUS;		// send once or continuously, if FALSE: send once.
 				blink_led(GREEN);
+			}
+			else {
+				PRINTF("Can not send ASYNC msg: state = %d, emergency_status = %d, authenticated = %d \n", state, emergency_status, net_db.authenticated);					
 			}
 		}
 
@@ -838,7 +836,6 @@ static void et_timeout_hanler(){
 		if ((timer_cnt % 5)==0) {
 			/* check join/disjoin in 50s */
 			if (is_connected()==TRUE) {
-	    		//PRINTF("Network status: JOINED\n");
 				get_next_hop_addr();
     			net_db.connected = TRUE;
 	    		net_db.lost_connection_cnt = 0;
@@ -847,7 +844,7 @@ static void et_timeout_hanler(){
 					reset_sequence();
 					emer_reply.cmd = ASYNC_MSG_JOINED;
 					emer_reply.err_code = ERR_NORMAL;
-					clock_delay(rand_delay());
+
 					send_asyn_msg(encryption_phase);
 
 	    			leds_off(GREEN);

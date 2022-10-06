@@ -69,7 +69,7 @@
 #define NETSTACK_CONF_MAC     	csma_driver			// nullmac_driver, csma_driver
 
 #undef 	NETSTACK_CONF_RDC
-#define NETSTACK_CONF_RDC     	contikimac_driver 	//nullrdc_driver, cxmac_driver, contikimac_driver
+#define NETSTACK_CONF_RDC     	nullrdc_driver 	//nullrdc_driver, cxmac_driver, contikimac_driver
 
 
 #define NETSTACK_CONF_RDC_CHANNEL_CHECK_RATE 	64
