@@ -169,8 +169,6 @@ static 	void process_sensor(uint8_t verbose);
 static 	void set_led_cc2538_shield(int value);
 
 
-
-
 /*---------------------------------------------------------------------------*/
 PROCESS(udp_echo_server_process, "SLS server process");
 AUTOSTART_PROCESSES(&udp_echo_server_process);
@@ -269,7 +267,7 @@ static void process_req_cmd(cmd_struct_t cmd){
 			case CMD_RF_LED_ON:
 				leds_on(BLUE);
 				led_db.status = STATUS_LED_ON;
-				PRINTF("Execute CMD = 0x%02X \n",CMD_RF_LED_ON);
+				PRINTF(" - Execute CMD = 0x%02X \n",CMD_RF_LED_ON);
 
 				set_led_cc2538_shield(1);
 				break;
@@ -277,7 +275,7 @@ static void process_req_cmd(cmd_struct_t cmd){
 			case CMD_RF_LED_OFF:
 				leds_off(BLUE);
 				led_db.status = STATUS_LED_OFF;
-				PRINTF("Execute CMD = 0x%02X \n",CMD_RF_LED_ON);
+				PRINTF(" - Execute CMD = 0x%02X \n",CMD_RF_LED_ON);
 
 				set_led_cc2538_shield(0);
 				break;
@@ -286,7 +284,7 @@ static void process_req_cmd(cmd_struct_t cmd){
 				leds_toggle(BLUE);
 				led_db.status = STATUS_LED_DIM;
 				led_db.dim = cmd.arg[0];			
-				PRINTF ("Execute CMD = 0x%02X; value = %d\n",CMD_LED_DIM, led_db.dim);
+				PRINTF (" - Execute CMD = 0x%02X; value = %d\n",CMD_LED_DIM, led_db.dim);
 				break;
 
 			case CMD_GET_RF_STATUS:
@@ -309,7 +307,7 @@ static void process_req_cmd(cmd_struct_t cmd){
 				reply.arg[1] = NETSTACK_CONF_RDC_CHANNEL_CHECK_RATE;
 				reply.arg[2] = net_db.channel;
 				rssi_sent = net_db.rssi + 150;
-				PRINTF("rssi_sent = %d \n", rssi_sent);
+				PRINTF(" - rssi_sent = %d \n", rssi_sent);
 				reply.arg[3] = (rssi_sent & 0xFF);	
 				reply.arg[4] = net_db.lqi;
 				reply.arg[5] = net_db.tx_power; 
@@ -548,7 +546,7 @@ static void tcpip_handler(void)	{
 		if (check_crc_for_cmd(&cmd)==TRUE) {PRINTF(" - Good CRC \n"); }
 		else {PRINTF(" - Bad CRC \n");}
 
-		reply = cmd;		
+		reply = cmd;	// copy cmd to reply for response		
 
 		//process command 
 		new_seq = cmd.seq;
@@ -581,7 +579,7 @@ static void tcpip_handler(void)	{
 				PRINTF("\nReply for LED-driver command: \n");
 				send_reply(reply, encryption_phase);
 #endif
-		send_cmd_to_uart();
+			send_cmd_to_uart();
 			}
 		}	
   	}
@@ -654,7 +652,6 @@ static unsigned int uart0_send_bytes(const	unsigned  char *s, unsigned int len) 
 #endif
 
 
-
 /*---------------------------------------------------------------------------*/
 static void send_cmd_to_uart() {
 #ifdef SLS_USING_CC2538DK
@@ -684,7 +681,7 @@ static void get_radio_parameter(void) {
 
 	NETSTACK_RADIO.get_value(RADIO_PARAM_TXPOWER, &aux);
 	net_db.tx_power = aux;
- 	PRINTF("Tx Power = %d dBm\n", aux);
+ 	PRINTF("Tx Power = %d dBm \n", aux);
 #endif 	
 }
 
@@ -724,7 +721,6 @@ static void reset_sequence(){
 	curr_seq 	= 0;
 	new_seq 	= 0;
 }
-
 
 
 /*---------------------------------------------------------------------------*/
@@ -792,7 +788,6 @@ static void et_timeout_hanler(){
 	else {
 		timer_cnt_1s = 0; 	//reset 1s cnt
 		timer_cnt++;		//10s, 20s, 30s,...
-
 		// count in 600s: timer_cnt timeout = 10s
 		if (timer_cnt==60) {timer_cnt =0;}
 
@@ -811,8 +806,6 @@ static void et_timeout_hanler(){
 		if ((timer_cnt % (SEND_ASYN_MSG_PERIOD / 10) )==0) {				
 			if ((state==STATE_NORMAL) && (emergency_status==TRUE) && (net_db.authenticated==TRUE)) {	
 				PRINTF("\nTimer: %ds expired: send an async msg, retrans_max = %d \n", SEND_ASYN_MSG_PERIOD, NUM_ASYNC_MSG_RETRANS);
-				process_sensor(PRINT_SENSOR);		//read sensor if having shield
-
 				emer_reply.cmd = ASYNC_MSG_SENT;
 				emer_reply.err_code = ERR_NORMAL;
 
@@ -846,7 +839,6 @@ static void et_timeout_hanler(){
 					emer_reply.err_code = ERR_NORMAL;
 
 					send_asyn_msg(encryption_phase);
-
 	    			leds_off(GREEN);
 	    		}
 
@@ -884,9 +876,7 @@ static void get_next_hop_addr(){
     rpl_dag_t *dag = rpl_get_any_dag();
     if(dag && dag->instance->def_route) {
 	    memcpy(&net_db.next_hop, &dag->instance->def_route->ipaddr, sizeof(uip_ipaddr_t));
-	    //PRINTF("Next_hop addr [%d] = ", sizeof(uip_ipaddr_t));
 	    //for (i=0; i<sizeof(uip_ipaddr_t);i++) {PRINTF("0x%02X ", net_db.next_hop[i]);}
-	    //PRINTF("\n");
     } 
 #endif        
 }
